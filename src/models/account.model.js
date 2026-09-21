@@ -1,4 +1,4 @@
-import pool from "../db/db";
+import pool from "../db/db.js";
 
 export const createAccount = async ({ user_id, type, currency }) => {
   const { rows } = await pool.query(
