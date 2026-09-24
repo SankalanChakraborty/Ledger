@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 
 export const authenticateToken = async (req, res, next) => {
   const accessToken = req.cookies?.accessToken;
+  console.log("Testing access token: ", accessToken);
   if (!accessToken) {
     return res
       .status(401)

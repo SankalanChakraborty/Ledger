@@ -66,6 +66,12 @@ export const login = async (req, res, next) => {
         .json({ status: "error", message: "Server misconfigurations" });
     }
 
+    if (req.cookies?.accessToken || req.cookies?.refreshToken) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "User already logged in" });
+    }
+
     const accessToken = jwt.sign(
       { id: user.id },
       process.env.SECRET_ACCESS_TOKEN,
@@ -81,6 +87,10 @@ export const login = async (req, res, next) => {
       },
     );
 
+    // store refresh token to the DB
+    await userModel.addUserRefreshToken(email, refreshToken);
+
+    // store access token and refresh token to cookies
     res.cookie("accessToken", accessToken, {
       ...cookieOptions,
       maxAge: 15 * 60 * 1000,
@@ -103,6 +113,25 @@ export const login = async (req, res, next) => {
     });
   } catch (error) {
     // console.log(error);
+    next(error);
+  }
+};
+
+export const logout = async (req, res, next) => {
+  try {
+    // remove the access token and refresh token from cookies
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+    console.log("Req.user>>>>>>>>>", req.user);
+    // remove the token from the DB
+    await userModel.removeUserRefreshToken(req.user.id);
+
+    return res.status(200).json({
+      status: "success",
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    console.log(error);
     next(error);
   }
 };
